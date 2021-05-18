@@ -556,6 +556,8 @@ class SidebarViewlet(ViewletBase):
         """
         Return menu item entries in a TAL-friendly form.
         """
+        if not api.user.has_permission(permissions.AddPortalContent, obj=self.context):
+            return []
         context = self.context
         request = self.request
         factories_view = getMultiAdapter(
