@@ -228,9 +228,30 @@ class SidebarViewlet(ViewletBase):
         """
         Return sidebar links from portal_actions.
         """
+        from plone.app.contenttypes.utils import replace_link_variables_by_paths
+        from Products.CMFPlone.utils import safe_unicode
+
+        main_nav_links = []
+        root = api.portal.get_navigation_root(self.context)
+        for brain in api.content.find(root.fp.main_nav, depth=1, portal_type={'query': ['Link']},
+                                      sort_on='getObjPositionInParent'):
+            if brain.Title == 'Home':
+                continue
+            link = brain.getObject()
+            url = replace_link_variables_by_paths(self.context, link.remoteUrl)
+            if not url.endswith('/'):
+                url += '/'
+            entry = {
+                "uid": brain.UID,
+                "url": url,
+                "title": safe_unicode(brain.Title),
+                "icon": self.get_icon('star'),
+            }
+            main_nav_links.append(entry)
+
         links = self.context.portal_actions.listFilteredActionsFor(self.context)  # noqa: 501
         sidebar_links = links.get('sidebar_links', [])
-        return sidebar_links
+        return sidebar_links + main_nav_links
 
     def get_user_data(self):
         user = get_user()
